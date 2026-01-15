@@ -27,16 +27,18 @@ const VerfiyPassword = () => {
         setLoading(true);
 
         try {
-            const res = await API.post('/auth/verify-otp',
-                { otp: values.otp.trim() },
-                {
-                    headers: {
-                        Authorization: `Bearer ${otpToken}`,
-                        "x-device-id": "jehan-device"
-                    }
-                }
-            )
-            console.log(res.data)
+            // const res = await API.post('/auth/verify-otp',
+            //     { otp: values.otp.trim() },
+            //     {
+            //         headers: {
+            //             Authorization: `Bearer ${otpToken}`,
+            //             "x-device-id": "jehan-device-1"
+            //         }
+            //     }
+            // )
+            // console.log(res.data)
+            const res = await API.post('/auth/verify-otp', { otp: values.otp.trim() });
+
 
             if (res.data.mfaRequired === true) {
                 localStorage.setItem("mfaToken", res.data.token);

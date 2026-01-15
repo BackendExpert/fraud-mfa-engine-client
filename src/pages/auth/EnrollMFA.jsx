@@ -28,16 +28,18 @@ const EnrollMFA = () => {
 
         const fetchEnrollState = async () => {
             try {
-                const res = await API.post(
-                    "/auth/mfa/enroll",
-                    {},
-                    {
-                        headers: {
-                            Authorization: `Bearer ${mfaToken}`,
-                            "x-device-id": "jehan-device-1"
-                        }
-                    }
-                );
+                // const res = await API.post(
+                //     "/auth/mfa/enroll",
+                //     {},
+                //     {
+                //         headers: {
+                //             Authorization: `Bearer ${mfaToken}`,
+                //             "x-device-id": "jehan-device-1"
+                //         }
+                //     }
+                // );
+                const res = await API.post('/auth/mfa/enroll"', {});
+
 
                 // ✅ Show QR only if backend sends it
                 if (res.data.qrCode) {
@@ -61,16 +63,18 @@ const EnrollMFA = () => {
         setLoading(true);
 
         try {
-            const res = await API.post(
-                "/auth/mfa/verify",
-                { token: values.otp },
-                {
-                    headers: {
-                        Authorization: `Bearer ${mfaToken}`,
-                        "x-device-id": "jehan-device-1"
-                    }
-                }
-            );
+            // const res = await API.post(
+            //     "/auth/mfa/verify",
+            //     { token: values.otp },
+            //     {
+            //         headers: {
+            //             Authorization: `Bearer ${mfaToken}`,
+            //             "x-device-id": "jehan-device-1"
+            //         }
+            //     }
+            // );
+            const res = await API.post('/auth/mfa/verify', { token: values.otp });
+
 
             localStorage.setItem("token", res.data.token);
             localStorage.removeItem("mfaToken");
