@@ -18,12 +18,10 @@ const CreateAuth = () => {
         setLoading(true);
 
         try {
-            // const res = await API.post('/auth/create-auth', values, {
-            //     headers: { "Content-Type": "application/json" },
-            // })
-
-            const res = await API.post("/auth/create-auth", { otp: values.otp.trim() });
-
+            const res = await API.post('/auth/create-auth', values, {
+                headers: { "Content-Type": "application/json" },
+            })
+            
 
             if (res.data.success) {
                 localStorage.setItem('otptoken', res.data.token)

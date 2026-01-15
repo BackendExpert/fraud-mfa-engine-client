@@ -1,47 +1,46 @@
-import React, { useEffect, useState } from 'react'
-import DefaultInput from '../../component/Form/DefaultInput'
-import DefaultButton from '../../component/Buttons/DefaultButton'
-import { useNavigate } from 'react-router-dom'
-import Toast from '../../component/Toast/Toast'
-import useForm from '../../hooks/useForm'
-import API from '../../services/api'
+import React, { useEffect, useState } from 'react';
+import DefaultInput from '../../component/Form/DefaultInput';
+import DefaultButton from '../../component/Buttons/DefaultButton';
+import { useNavigate } from 'react-router-dom';
+import Toast from '../../component/Toast/Toast';
+import useForm from '../../hooks/useForm';
+import API from '../../services/api'; // our updated API with persistent deviceId
 
 const EnrollMFA = () => {
     const navigate = useNavigate();
     const [qrCode, setQrCode] = useState(null);
-
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState(null);
 
-    const mfaToken = localStorage.getItem("mfaToken");
-
     const { values, handleChange } = useForm({ otp: '' });
+    const [mfaToken, setMfaToken] = useState(null);
 
+    // ✅ Load MFA token from localStorage
     useEffect(() => {
-        if (!localStorage.getItem("mfaToken")) {
+        const token = localStorage.getItem("mfaToken");
+        if (!token) {
             navigate("/", { replace: true });
+            return;
         }
-    }, []);
+        setMfaToken(token);
+    }, [navigate]);
 
+    // ✅ Fetch MFA enrollment state (QR code)
     useEffect(() => {
         if (!mfaToken) return;
 
         const fetchEnrollState = async () => {
             try {
-                // const res = await API.post(
-                //     "/auth/mfa/enroll",
-                //     {},
-                //     {
-                //         headers: {
-                //             Authorization: `Bearer ${mfaToken}`,
-                //             "x-device-id": "jehan-device-1"
-                //         }
-                //     }
-                // );
-                const res = await API.post('/auth/mfa/enroll"', {});
+                const res = await API.post(
+                    "/auth/mfa/enroll",
+                    {}, // no body needed
+                    {
+                        headers: {
+                            Authorization: `Bearer ${mfaToken}`, // attach token manually
+                        }
+                    }
+                );
 
-
-                // ✅ Show QR only if backend sends it
                 if (res.data.qrCode) {
                     setQrCode(res.data.qrCode);
                 } else {
@@ -49,7 +48,7 @@ const EnrollMFA = () => {
                 }
 
             } catch (err) {
-                console.error("FETCH MFA STATE ERROR:", err.response?.data || err.message);
+                console.error("MFA enroll fetch error:", err.response?.data || err.message);
                 navigate("/", { replace: true });
             }
         };
@@ -57,29 +56,27 @@ const EnrollMFA = () => {
         fetchEnrollState();
     }, [mfaToken, navigate]);
 
-
+    // ✅ Handle MFA verification
     const handleVerifyMFA = async (e) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            // const res = await API.post(
-            //     "/auth/mfa/verify",
-            //     { token: values.otp },
-            //     {
-            //         headers: {
-            //             Authorization: `Bearer ${mfaToken}`,
-            //             "x-device-id": "jehan-device-1"
-            //         }
-            //     }
-            // );
-            const res = await API.post('/auth/mfa/verify', { token: values.otp });
-
+            const res = await API.post(
+                "/auth/mfa/verify",
+                { token: values.otp.trim() }, // trim OTP input
+                {
+                    headers: {
+                        Authorization: `Bearer ${mfaToken}`,
+                    }
+                }
+            );
 
             localStorage.setItem("token", res.data.token);
             localStorage.removeItem("mfaToken");
 
-            navigate("/dashboard", { replace: true });
+            setToast({ success: true, message: "MFA verified successfully!" });
+            setTimeout(() => navigate("/dashboard", { replace: true }), 1500);
 
         } catch (err) {
             setToast({
@@ -90,7 +87,6 @@ const EnrollMFA = () => {
             setLoading(false);
         }
     };
-
 
     return (
         <div className='min-h-screen bg-gray-50 pt-32'>
@@ -116,19 +112,20 @@ const EnrollMFA = () => {
                     placeholder="Enter 6-digit code"
                     type='text'
                     value={values.otp}
-                    name={'otp'}
+                    name='otp'
                     onChange={handleChange}
                     required
+                    disabled={loading} // prevent input while verifying
                 />
 
                 <DefaultButton
                     type="submit"
                     label={loading ? "Verifying..." : "Verify MFA"}
+                    disabled={loading} // prevent double-submit
                 />
             </form>
-
         </div>
-    )
-}
+    );
+};
 
-export default EnrollMFA
+export default EnrollMFA;
